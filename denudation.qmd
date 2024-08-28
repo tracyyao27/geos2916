@@ -1,0 +1,264 @@
+---
+title: "geos2916_denudation"
+author: "Tracy"
+format: html
+---
+
+# Importing data
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(janitor)
+library(patchwork)
+library(ggpmisc)
+```
+
+```{r}
+oxygen <- read_excel("wilson.xlsx", sheet=2,
+          range="A2:E164", col_names=TRUE) |>
+  janitor::clean_names() |>
+  select(2,5)
+
+lead <- read_excel("wilson.xlsx", sheet=3,
+        range="A2:K90", col_names=TRUE) |>
+  janitor::clean_names() |>
+  select(3,6)
+
+zachos <- read_excel("zachos.xlsx",
+          range="A2:C164", col_names=TRUE) |> janitor::clean_names()
+
+oxygen_adj <- zachos |> select(1,2)
+lithium <- zachos |> select(1,3)
+
+zachos_isotopes <- zachos |> select(2, 3)
+```
+
+```{r}
+# missing data check
+visdat::vis_miss(lead)
+```
+
+
+# Oxygen graph
+
+```{r}
+oxygen_time <- oxygen |> 
+  # specify plotted data
+  ggplot(aes(x=age_ka_bp,
+             y=d18o_cib_combined)) + 
+  # readability
+  scale_x_continuous(position="top", breaks=seq(0,260, by=25)) + 
+  scale_y_reverse() + 
+  # aesthetics
+  geom_line(colour="blue") +
+  theme_classic() +
+  labs(x="Thousands of years ago",
+       y="Combined d18O")
+  
+oxygen_time
+```
+
+# Lead graph
+
+```{r}
+lead_time <- lead |> 
+  # specify plotted data
+  ggplot(aes(x=age_ka_bp,
+             y=x206_204)) + 
+  # readability
+  scale_x_continuous(position="top", breaks=seq(0,260, by=25)) + 
+  scale_y_reverse() + 
+  # aesthetics
+  geom_line(colour="red") +
+  theme_classic() +
+  labs(x="Thousands of years ago",
+       y="d206Pb")
+
+lead_time
+```
+
+# Individual Li + d18O graphs
+
+```{r}
+### lithium
+lithium_time <- lithium |> 
+  # specify plotted data
+  ggplot(aes(x=age_ma,
+             y=d7li)) + 
+  # readability
+  scale_x_continuous(position="top", breaks=seq(0,40, by=5)) + 
+  coord_cartesian(xlim = c(0, 40)) +
+  scale_y_reverse(breaks=seq(22,32,by=1)) + 
+  # aesthetics
+  geom_line(colour="gold") +
+  theme_classic() +
+  labs(x="Millions of years ago",
+       y="d7Li")
+
+### oxygen adjusted
+oxygen_adj_time <- oxygen_adj |> 
+  # specify plotted data
+  ggplot(aes(x=age_ma,
+             y=d18oadj)) + 
+  
+  # readability
+  scale_x_continuous(position="top", breaks=seq(0,40, by=5)) + 
+  coord_cartesian(xlim = c(0, 40)) +
+  scale_y_reverse(breaks=seq(1,4,by=0.5)) + 
+  
+  # aesthetics
+  geom_line(colour="blue") +
+  theme_classic() +
+  labs(x="Millions of years ago",
+       y="Adjusted d18O")
+
+# graph inspection time !!
+oxygen_adj_time/lithium_time
+```
+
+# Grouped lead + d18O graph
+
+```{r}
+# transformation coefficients to maximise space
+coeff_d18O <- 3
+
+part_b <- lithium |> 
+  # specify plotted data
+  ggplot(aes(x=age_ma)) +
+         geom_line(aes(y=d7li),colour="gold") +
+         geom_line(aes(y=(oxygen_adj$d18oadj)*coeff_d18O),colour="blue") +
+  # x axis
+  scale_x_continuous(position="top", breaks=seq(0,40, by=4)) + 
+  coord_cartesian(xlim=c(0,40)) +
+  labs(x="Millions of years ago") +
+  # y axes
+  scale_y_reverse(
+    name="d7Li                                               ",
+    breaks=seq(22,32,by=2),
+    sec.axis=sec_axis(trans=~./coeff_d18O,
+                    name="Adjusted d18O                                                 ",
+                    breaks=seq(1,4,by=0.5))) + 
+      # aesthetics
+  theme_classic()
+
+part_b
+```
+
+```{r}
+part_b_2 <- part_b + 
+  # Eocene Epoch
+  annotate("rect", alpha=0.3, fill="lightblue2",
+         xmin=34, xmax=40,
+         ymin=0,
+         ymax=32) +
+
+  # Oligocene Epoch
+  annotate("rect", alpha=0.3, fill="lightgreen",
+         xmin=23, xmax=34,
+         ymin=0,
+         ymax=32) +
+
+  # Miocene Epoch
+  annotate("rect", alpha=0.3, fill="yellow",
+         xmin=5, xmax=23,
+         ymin=0,
+         ymax=32) +
+  
+  # Pliocene Epoch
+  annotate("rect", alpha=0.2, fill="orange",
+         xmin=2.6, xmax=5,
+         ymin=0,
+         ymax=32) +
+
+  # Pleistocene Epoch
+  annotate("rect", alpha=0.2, fill="red",
+         xmin=0, xmax=2.6,
+         ymin=0,
+         ymax=32) 
+
+part_b_2
+```
+
+
+```{r}
+oxygen_time <- oxygen_time + 
+  # MIS 1 (Holocene Interglacial)
+  annotate("rect", alpha=0.2, 
+         xmin=0, xmax=12,
+         ymin=min(oxygen[2]),
+         ymax=max(oxygen[2])) +
+
+  # MIS 2 (Last Glacial Maxima)
+  annotate("rect", alpha=0.3, fill="lightblue2",
+         xmin=20, xmax=26,
+         ymin=min(oxygen[2]),
+         ymax=max(oxygen[2])) +
+
+  # MIS 5e (Eemain Interglacial)
+  annotate("rect", alpha=0.2, 
+         xmin=115, xmax=130,
+         ymin=min(oxygen[2]),
+         ymax=max(oxygen[2])) +
+  
+  # MIS 7e (Aveley Interglacial)
+  annotate("rect", alpha=0.2, 
+         xmin=230, xmax=242,
+         ymin=min(oxygen[2]),
+         ymax=max(oxygen[2]))
+```
+
+```{r}
+lead_time <- lead_time + 
+  # MIS 1 (Holocene Interglacial)
+  annotate("rect", alpha=0.2, 
+         xmin=0, xmax=12,
+         ymin=min(lead[2]),
+         ymax=max(lead[2])) +
+
+  # MIS 2 (Last Glacial Maxima)
+  annotate("rect", alpha=0.3, fill="lightblue2",
+         xmin=20, xmax=26,
+         ymin=min(lead[2]),
+         ymax=max(lead[2])) +
+
+  # MIS 5e (Eemain Interglacial)
+  annotate("rect", alpha=0.2, 
+         xmin=115, xmax=130,
+         ymin=min(lead[2]),
+         ymax=max(lead[2])) +
+  
+  # MIS 7e (Aveley Interglacial)
+  annotate("rect", alpha=0.2, 
+         xmin=230, xmax=242,
+         ymin=min(lead[2]),
+         ymax=max(lead[2]))
+```
+
+
+```{r}
+oxygen_time/lead_time
+```
+
+# Scatterplot
+
+```{r}
+lithium_oxygen <- zachos_isotopes |>
+  ggplot(aes(x=(d18oadj), y=(d7li))) +
+  geom_point(size=1) +
+  
+  # regression line
+  geom_smooth(method=lm, se=FALSE, 
+              col = "red", linewidth=0.5) +
+  stat_poly_eq() +
+  
+  # aesthetics
+  theme_classic() +
+  scale_x_continuous(breaks=seq(1,4, by=0.5)) + 
+  scale_y_continuous(breaks=seq(21, 32, by=2)) + 
+  labs(x="d18O", y="d7Li")
+
+lithium_oxygen
+```
+
