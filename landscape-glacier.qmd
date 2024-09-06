@@ -1,0 +1,76 @@
+---
+title: "geos2916_landscape_glaciers"
+author: "Tracy"
+format: html
+---
+
+# Packages
+
+```{r}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+```
+
+# Importing data
+
+```{r}
+moraine <- read_excel("blue_lake_moraine.xlsx", sheet=1,
+          range="A1:H20", col_names=TRUE) |>
+  janitor::clean_names() |>
+  filter(!is.na(average_age_yrs)) |>
+  mutate(
+    age_ka_bp=average_age_yrs/1000
+  )
+
+oxygen <- read_excel("blue_lake_moraine.xlsx", sheet=2,
+          range="A17:D1008", col_names=TRUE) |>
+  janitor::clean_names()
+```
+
+# Moraine headwall distance graph
+
+```{r}
+moraine_distance <- moraine |>
+  # specify plotted data
+  ggplot(aes(x=age_ka_bp,
+             y=distance_from_headwall_km,
+             label=sample)) +
+  geom_point(colour="red",size=2) +
+  geom_text(vjust=-1, size=3) +
+  # aesthetics
+  theme_classic() +
+  scale_x_continuous(breaks=seq(0,70,by=10)) +
+  coord_cartesian(xlim=c(0,70)) +
+  labs(x="Thousands of years ago",
+       y= "Glacial length (km)")
+  
+moraine_distance
+```
+
+# Vostok temperature change graph
+
+```{r}
+oxygen_plot <- oxygen |> 
+  # specify plotted data
+  ggplot(aes(x=age_ka_bp,
+             y=delta_t_c)) +
+  geom_line(colour="blue") +
+  # aesthetics
+  theme_classic() +
+  geom_hline(yintercept=0, linetype="dotted", colour="red") +
+  scale_x_continuous(breaks=seq(0,70,by=10)) +
+  coord_cartesian(xlim=c(0,70)) +
+  labs(x="Thousands of years ago",
+       y="ΔT (°C)")
+
+oxygen_plot
+```
+
+# Comparison plot
+
+```{r}
+moraine_distance/oxygen_plot
+```
+

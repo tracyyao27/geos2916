@@ -55,7 +55,7 @@ oxygen_time <- oxygen |>
   geom_line(colour="blue") +
   theme_classic() +
   labs(x="Thousands of years ago",
-       y="Combined d18O")
+       y="Combined δ18O")
   
 oxygen_time
 ```
@@ -74,7 +74,7 @@ lead_time <- lead |>
   geom_line(colour="red") +
   theme_classic() +
   labs(x="Thousands of years ago",
-       y="d206Pb")
+       y="δ206Pb")
 
 lead_time
 ```
@@ -95,7 +95,7 @@ lithium_time <- lithium |>
   geom_line(colour="gold") +
   theme_classic() +
   labs(x="Millions of years ago",
-       y="d7Li")
+       y="δ7Li")
 
 ### oxygen adjusted
 oxygen_adj_time <- oxygen_adj |> 
@@ -112,7 +112,7 @@ oxygen_adj_time <- oxygen_adj |>
   geom_line(colour="blue") +
   theme_classic() +
   labs(x="Millions of years ago",
-       y="Adjusted d18O")
+       y="Adjusted δ18O")
 
 # graph inspection time !!
 oxygen_adj_time/lithium_time
@@ -135,10 +135,10 @@ part_b <- lithium |>
   labs(x="Millions of years ago") +
   # y axes
   scale_y_reverse(
-    name="d7Li                                               ",
+    name="δ7Li                                               ",
     breaks=seq(22,32,by=2),
     sec.axis=sec_axis(trans=~./coeff_d18O,
-                    name="Adjusted d18O                                                 ",
+                    name="Adjusted δ18O                                                 ",
                     breaks=seq(1,4,by=0.5))) + 
       # aesthetics
   theme_classic()
@@ -257,7 +257,7 @@ lithium_oxygen <- zachos_isotopes |>
   theme_classic() +
   scale_x_continuous(breaks=seq(1,4, by=0.5)) + 
   scale_y_continuous(breaks=seq(21, 32, by=2)) + 
-  labs(x="d18O", y="d7Li")
+  labs(x="δ18O", y="δ7Li")
 
 lithium_oxygen
 ```

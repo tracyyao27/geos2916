@@ -1,0 +1,84 @@
+---
+title: "geos2916_landscape_arid"
+author: "Tracy"
+format: html
+---
+
+# Packages
+
+```{r}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+```
+
+# Importing data
+
+```{r}
+tortoise <- read_excel("tortoise.xlsx",
+          range="A1:B1485", col_names=TRUE) |>
+  janitor::clean_names() |>
+  mutate(
+    age_ka=age_cal_yr/1000 # thousand years
+  )
+
+vostok <- read_excel("vostok.xlsx",
+          range="A1:B501", col_names=TRUE) |>
+  janitor::clean_names() |>
+  mutate(
+    age_ka=age_yrs/1000, # thousand years
+  )
+```
+
+# Tortoise Lagoon graph
+
+```{r}
+tortoise_plot <- tortoise |> 
+  # specify plotted data
+  ggplot(aes(x=age_ka,
+             y=flux_g_m2_yr)) + 
+  geom_line(colour="orange") +
+  # aesthetics
+  scale_y_continuous(breaks=seq(0,300, by=50)) + 
+  scale_x_continuous(breaks=seq(0,46, by=5), # intervals
+                     expand=c(0,0)) + # start at zero +
+  coord_cartesian(xlim=c(0,46)) + # force graph to zooooom out
+  theme_classic() +
+  labs(x="Thousands of years ago", 
+       y= "Dust flux (g"~m^-2~yr^-1~")")
+  
+tortoise_plot
+```
+
+# Vostok graph
+
+```{r}
+vostok_plot <- vostok |> 
+  # specify plotted data
+  ggplot(aes(x=age_ka,
+             y=dust_flux_mg_m_2_a_1)) + 
+  geom_line(colour="green4") +
+  # aesthetics
+  coord_cartesian(xlim=c(0,190)) +
+  scale_y_continuous(breaks=seq(0,16, by=2)) + 
+  scale_x_continuous(breaks=seq(0,200, by=20),
+                     expand=c(0,0)) + 
+  theme_classic() +
+  labs(x="Thousands of years ago", 
+       y= "Dust flux (mg"~m^-2~yr^-1~")")
+  
+vostok_plot
+```
+
+# Comparison graph
+
+```{r}
+vostok_45k <- vostok_plot +
+  coord_cartesian(xlim=c(0,46)) +
+  scale_x_continuous(breaks=seq(0,46, by=5),
+                     expand=c(0,0))  
+
+tortoise_plot/vostok_45k
+```
+
