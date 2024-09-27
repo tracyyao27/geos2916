@@ -16,14 +16,14 @@ library(patchwork)
 # Importing data
 
 ```{r}
-tortoise <- read_excel("tortoise.xlsx",
+tortoise <- read_excel("data/tortoise.xlsx",
           range="A1:B1485", col_names=TRUE) |>
   janitor::clean_names() |>
   mutate(
     age_ka=age_cal_yr/1000 # thousand years
   )
 
-vostok <- read_excel("vostok.xlsx",
+vostok <- read_excel("data/vostok.xlsx",
           range="A1:B501", col_names=TRUE) |>
   janitor::clean_names() |>
   mutate(

@@ -3,7 +3,6 @@ title: "geos2916_landscape_glaciers"
 author: "Tracy"
 format: html
 ---
-
 # Packages
 
 ```{r}
@@ -16,7 +15,7 @@ library(patchwork)
 # Importing data
 
 ```{r}
-moraine <- read_excel("blue_lake_moraine.xlsx", sheet=1,
+moraine <- read_excel("data/blue_lake_moraine.xlsx", sheet=1,
           range="A1:H20", col_names=TRUE) |>
   janitor::clean_names() |>
   filter(!is.na(average_age_yrs)) |>
@@ -24,7 +23,7 @@ moraine <- read_excel("blue_lake_moraine.xlsx", sheet=1,
     age_ka_bp=average_age_yrs/1000
   )
 
-oxygen <- read_excel("blue_lake_moraine.xlsx", sheet=2,
+oxygen <- read_excel("data/blue_lake_moraine.xlsx", sheet=2,
           range="A17:D1008", col_names=TRUE) |>
   janitor::clean_names()
 ```
@@ -38,7 +37,7 @@ moraine_distance <- moraine |>
              y=distance_from_headwall_km,
              label=sample)) +
   geom_point(colour="red",size=2) +
-  geom_text(vjust=-1, size=3) +
+  geom_text(hjust=-0.25, size=3) +
   # aesthetics
   theme_classic() +
   scale_x_continuous(breaks=seq(0,70,by=10)) +
@@ -71,6 +70,6 @@ oxygen_plot
 # Comparison plot
 
 ```{r}
-moraine_distance/oxygen_plot
+moraine_distance/oxygen_plot + plot_layout(heights=c(4,8))
 ```
 
