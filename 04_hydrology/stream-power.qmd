@@ -81,7 +81,7 @@ stream_power <- function(station, slope) {
   # daily stream power
   station |> filter(between(year, 2009, 2011)) |>
     mutate(
-      q = flow_ML_day*ML_m3/t, # si unit conversion, flow (m^3/s)
+      q = flow_ML_day*ML_m3/t, # flow in m^3/s
       streampower = p*g*q*slope) |>
     
   # monthly average
@@ -140,16 +140,18 @@ combined
 log_monthly_sp <- ggplot(combined, aes(fill=station, y=log_streampower, x=month)) + 
     geom_bar(position="dodge", stat="identity") +
   labs(x="Month", fill="Station",
-       y=bquote(Log~mean~stream~power~(kg~m^-2~s^-3)))
+       y=bquote(Log~mean~stream~power~(W~m^-1)))
 
 ggsave("figures/log_monthly_sp.png", height=4, plot=log_monthly_sp)
+
+log_monthly_sp
 ```
 
 ```{r}
 # individual
 graph_steampower <- function(data) {
 data |> ggplot(aes(x=month_abb, y=10^log_streampower)) + 
-  labs(x="Month", y=bquote(Mean~Monthly~Stream~Power~(kg~m^-2~s^-3)))
+  labs(x="Month", y=bquote(Mean~Monthly~Stream~Power~(W~m^-1)))
 }
 
 wagga_plot <- graph_steampower(wagga_monthly) + geom_col(col="gold", fill="gold")
@@ -210,7 +212,7 @@ combined_sp
 log_monthly_specific_sp <- ggplot(combined_sp, aes(fill=station, y=log_specific_sp, x=month)) + 
     geom_bar(position="dodge", stat="identity") +
   labs(x="Month", fill="Station",
-       y=bquote(Log~mean~specific~stream~power~(kg~m^-2~s^-3)))
+       y=bquote(Log~mean~specific~stream~power~(W~m^-2)))
 
 ggsave("figures/log_monthly_specific_sp.png", height=4, plot=log_monthly_specific_sp)
 ```
@@ -219,7 +221,7 @@ ggsave("figures/log_monthly_specific_sp.png", height=4, plot=log_monthly_specifi
 # individual
 graph_steampower <- function(data) {
 data |> ggplot(aes(x=month_abb, y=10^log_specific_sp)) + 
-  labs(x="Month", y=bquote(Mean~Monthly~Specific~Stream~Power~(kg~m^-2~s^-3)))
+  labs(x="Month", y=bquote(Mean~monthly~specific~stream~power~(W~m^-2)))
 }
 
 wagga_sp_plot <- graph_steampower(wagga_monthly_sp) + geom_col(col="gold", fill="gold")
@@ -252,7 +254,7 @@ sc_w=227
 sc_g=50.8
 
 # sediment flux (T/day -> 10^6 g/day)
-sediment_flux <- function(flow, concentration) {concentration*flow/10^6} # tonnes/day
+sediment_flux <- function(flow, concentration) {concentration*flow/10^3} # tonnes/day
 
 sf_w <- sediment_flux(flow_w, sc_w)
 sf_g <- sediment_flux(flow_g, sc_g)
@@ -265,10 +267,12 @@ peakd_g <- gundagai |> filter(year==2011) |>
 
 # minimum energy slope (m/m)
 s_minimum <- function(sediment_flux, discharge) {
-  (sediment_flux/discharge)^0.708*(discharge^-0.080)}
+  ((sediment_flux/discharge)^0.708)*(discharge^-0.080)}
 
 s_fmin_w <- s_minimum(sf_w, peakd_w) 
 s_fmin_g <- s_minimum(sf_g, peakd_g)
+
+s_fmin_w; s_fmin_g
 ```
 
 ## b. Minimum energy slope vs local valley slope
