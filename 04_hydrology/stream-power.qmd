@@ -102,7 +102,9 @@ narrandera_monthly <- stream_power(narrandera, S_n)
 wagga_monthly; gundagai_monthly; narrandera_monthly
 ```
 
-# Q2: Graphing monthly mean stream flow
+# Q2: Monthly mean stream flow
+
+## a. Calculations
 
 ```{r}
 # monthly naming + ordering
@@ -119,6 +121,32 @@ wagga_monthly; gundagai_monthly; narrandera_monthly
 ```
 
 ```{r}
+# combined dataset for plotting
+wagga_monthly$station="Wagga Wagga"
+gundagai_monthly$station="Gundagai"
+narrandera_monthly$station="Narrandera"
+
+combined <- rbind(wagga_monthly, gundagai_monthly, narrandera_monthly) |> mutate(month=month_abb, month_abb=NULL) |>
+  select("month", "station", "log_streampower")
+
+combined
+```
+
+
+## b. Plotting
+
+```{r}
+# combined
+log_monthly_sp <- ggplot(combined, aes(fill=station, y=log_streampower, x=month)) + 
+    geom_bar(position="dodge", stat="identity") +
+  labs(x="Month", fill="Station",
+       y=bquote(Log~mean~stream~power~(kg~m^-2~s^-3)))
+
+ggsave("figures/log_monthly_sp.png", height=4, plot=log_monthly_sp)
+```
+
+```{r}
+# individual
 graph_steampower <- function(data) {
 data |> ggplot(aes(x=month_abb, y=10^log_streampower)) + 
   labs(x="Month", y=bquote(Mean~Monthly~Stream~Power~(kg~m^-2~s^-3)))
@@ -163,10 +191,32 @@ narrandera_monthly_sp <- specific_sp(narrandera_monthly, b_n)
 wagga_monthly_sp; gundagai_monthly_sp; narrandera_monthly_sp
 ```
 
+```{r}
+# combined dataset for plotting
+wagga_monthly_sp$station="Wagga Wagga"
+gundagai_monthly_sp$station="Gundagai"
+narrandera_monthly_sp$station="Narrandera"
+
+combined_sp <- rbind(wagga_monthly_sp, gundagai_monthly_sp, narrandera_monthly_sp) |> mutate(month=month_abb, month_abb=NULL) |>
+  select("month", "station", "log_specific_sp")
+
+combined_sp
+```
+
 ## b. Plotting
 
 ```{r}
-# plotting :)
+# combined
+log_monthly_specific_sp <- ggplot(combined_sp, aes(fill=station, y=log_specific_sp, x=month)) + 
+    geom_bar(position="dodge", stat="identity") +
+  labs(x="Month", fill="Station",
+       y=bquote(Log~mean~specific~stream~power~(kg~m^-2~s^-3)))
+
+ggsave("figures/log_monthly_specific_sp.png", height=4, plot=log_monthly_specific_sp)
+```
+
+```{r}
+# individual
 graph_steampower <- function(data) {
 data |> ggplot(aes(x=month_abb, y=10^log_specific_sp)) + 
   labs(x="Month", y=bquote(Mean~Monthly~Specific~Stream~Power~(kg~m^-2~s^-3)))
@@ -207,12 +257,18 @@ sediment_flux <- function(flow, concentration) {concentration*flow/10^6} # tonne
 sf_w <- sediment_flux(flow_w, sc_w)
 sf_g <- sediment_flux(flow_g, sc_g)
 
+# peak daily discharge
+peakd_w <- wagga |> filter(year==2011) |>
+  mutate(q=flow_ML_day*ML_m3/t) |> select(q) |> max()
+peakd_g <- gundagai |> filter(year==2011) |>
+  mutate(q=flow_ML_day*ML_m3/t) |> select(q) |> max()
+
 # minimum energy slope (m/m)
 s_minimum <- function(sediment_flux, discharge) {
-  (sediment_flux/discharge)^0.708*discharge^-0.080)}
+  (sediment_flux/discharge)^0.708*(discharge^-0.080)}
 
-s_fmin_w <- s_minimum(sf_w, ?) # which discharge to use?
-s_fmin_g <- s_minimum(sf_g, ?)
+s_fmin_w <- s_minimum(sf_w, peakd_w) 
+s_fmin_g <- s_minimum(sf_g, peakd_g)
 ```
 
 ## b. Minimum energy slope vs local valley slope
