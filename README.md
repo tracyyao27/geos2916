@@ -21,3 +21,5 @@ glacier.qmd - R code for plotting glacial moraine length at Blue Lake and temper
 4. Hydrology report
 
 streampower.qmd - calculations for monthly stream power and specific stream power.
+
+discharge_check.xlsx - repeat calculations  in Excel for validating values.

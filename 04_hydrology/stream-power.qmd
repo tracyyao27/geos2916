@@ -17,7 +17,7 @@ library(ggpmisc)
 
 # plotting
 theme_set(theme_classic())
-palette = (c("orange", "lightgreen",  "lightblue"))
+options(scipen=100) # scientific notation
 ```
 
 ```{r message=FALSE}
@@ -71,9 +71,9 @@ ML_m3=1000 # cubic metres in 1 megalitre
 t=86400 # length of a day (s)
 
 # local valley slopes (m/m)
-S_w=3.2*10^3 # wagga wagga
+S_w=3.2*10^-3 # wagga wagga
 S_g=0.16 # gundagai
-S_n=9.2*10^3 # narrandera
+S_n=9.2*10^-3 # narrandera
 
 # stream power (kg/m^2/s^3)
 stream_power <- function(station, slope) {
@@ -126,8 +126,10 @@ wagga_monthly$station="Wagga Wagga"
 gundagai_monthly$station="Gundagai"
 narrandera_monthly$station="Narrandera"
 
-combined <- rbind(wagga_monthly, gundagai_monthly, narrandera_monthly) |> mutate(month=month_abb, month_abb=NULL) |>
-  select("month", "station", "log_streampower")
+combined <- rbind(wagga_monthly, gundagai_monthly, narrandera_monthly) |> 
+  mutate(month=month_abb, month_abb=NULL, # months for plotting
+         streampower = 10^log_streampower) |> # reference
+  select("month", "station", "log_streampower", "streampower")
 
 combined
 ```
@@ -151,7 +153,7 @@ log_monthly_sp
 # individual
 graph_steampower <- function(data) {
 data |> ggplot(aes(x=month_abb, y=10^log_streampower)) + 
-  labs(x="Month", y=bquote(Mean~Monthly~Stream~Power~(W~m^-1)))
+  labs(x="Month", y=" ")
 }
 
 wagga_plot <- graph_steampower(wagga_monthly) + geom_col(col="gold", fill="gold")
@@ -199,10 +201,21 @@ wagga_monthly_sp$station="Wagga Wagga"
 gundagai_monthly_sp$station="Gundagai"
 narrandera_monthly_sp$station="Narrandera"
 
-combined_sp <- rbind(wagga_monthly_sp, gundagai_monthly_sp, narrandera_monthly_sp) |> mutate(month=month_abb, month_abb=NULL) |>
-  select("month", "station", "log_specific_sp")
+combined_sp <- rbind(wagga_monthly_sp, gundagai_monthly_sp, narrandera_monthly_sp) |> 
+  mutate(month=month_abb, 
+         month_abb=NULL,
+         specific_sp=10^log_specific_sp) |>
+  select("month", "station", "log_specific_sp", "specific_sp")
 
 combined_sp
+```
+
+```{r}
+combined_sp |> group_by(station, month) |>
+  summarise(
+    min=min(specific_sp),
+    max=max(specific_sp)
+  )
 ```
 
 ## b. Plotting
@@ -224,16 +237,14 @@ data |> ggplot(aes(x=month_abb, y=10^log_specific_sp)) +
   labs(x="Month", y=bquote(Mean~monthly~specific~stream~power~(W~m^-2)))
 }
 
-wagga_sp_plot <- graph_steampower(wagga_monthly_sp) + geom_col(col="gold", fill="gold")
 gundagai_sp_plot <- graph_steampower(gundagai_monthly_sp) + geom_col(col="blue", fill="blue")
+wagga_sp_plot <- graph_steampower(wagga_monthly_sp) + geom_col(col="gold", fill="gold") 
 narrandera_sp_plot <- graph_steampower(narrandera_monthly_sp) + geom_col(col="red", fill="red")
 
 # saving plots
-ggsave("figures/wagga_sp_flow.png", height=4, plot=wagga_sp_plot)
 ggsave("figures/gundagai_sp_flow.png", height=4, plot=gundagai_sp_plot)
+ggsave("figures/wagga_sp_flow.png", height=4, plot=wagga_sp_plot)
 ggsave("figures/narrandera_sp_flow.png", height=4, plot=narrandera_sp_plot)
-
-wagga_sp_plot/gundagai_sp_plot/narrandera_sp_plot
 ```
 
 # Q4: Murrumbidgee flooding
